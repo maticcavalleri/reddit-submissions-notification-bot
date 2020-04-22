@@ -1,5 +1,19 @@
 import praw
 
+def run_stream(stream, handler):
+    for item in stream:
+        if item is None:
+            break
+        handler(item)
+
+def inbox_handler(message):
+    """ handles new personal messages """
+    print(message.author, message.body)
+
+def submission_handler(submission):
+    """ handles new posts """
+    print(submission.title)
+
 cred_dict = {}
 file = open ("cred.txt", "r")
 for line in file.readlines():
@@ -12,6 +26,9 @@ reddit = praw.Reddit(client_id=cred_dict['client_id'],
 
 subreddit = reddit.subreddit('PhotoshopRequest')
 
-for submission in subreddit.stream.submissions():
-    print(submission.title)
-    break
+inbox_stream = reddit.inbox.stream(pause_after=-1)
+submission_stream = subreddit.stream.submissions(pause_after=-1)
+
+while True:
+    run_stream(inbox_stream, inbox_handler)
+    run_stream(submission_stream, submission_handler)
