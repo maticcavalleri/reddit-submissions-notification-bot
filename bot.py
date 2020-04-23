@@ -32,25 +32,44 @@ class RedditBot():
 
     def inbox_handler(self, message):
         """ handles new personal messages """
-        if "unsubscribe" in message.body.lower():
+        if "unsubscribe" in message.body.lower() and str(message.author) in self.user_list:
             self.user_list.remove(str(message.author))
             self.reddit.redditor(str(message.author)).message(
                 'successfully unsubscribed',
                 'You have been successfully **unsubscribed** from receiving messages from this bot.\n\n\n'
-                '*^I\'m ^a ^bot, ^bleep, ^bloop*'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
                 )
-            print('unsubbed')
-            
+
+        elif "unsubscribe" in message.body.lower() and str(message.author) not in self.user_list:
+            self.reddit.redditor(str(message.author)).message(
+                'Already unsubscribed',
+                'You are trying to **unsubscribe** but it seems like **you are not on subscription list**.\n\n\n'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
+                )
+
+        elif "subscribe" in message.body.lower() and str(message.author) in self.user_list:
+            self.reddit.redditor(str(message.author)).message(
+                'Already subscribed',
+                'You are trying to **subscribe** but it seems like **you are already on subscription list**.\n\n\n'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
+                )
+
         elif "subscribe" in message.body.lower() and str(message.author) not in self.user_list:
             self.user_list.append(str(message.author))
             self.reddit.redditor(str(message.author)).message(
                 'successfully subscribed',
-                'You have been successfully **subscribed** from receiving messages from this bot.\n\n\n'
-                '*^I\'m ^a ^bot, ^bleep, ^bloop*'
+                'You have been successfully **subscribed** to receiving messages from this bot.\n\n\n'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
                 )
-            print('subbed')
+
         else:
-            print(message.author, message.body)
+            self.reddit.redditor(str(message.author)).message(
+                'No command found',
+                'I could not find a supported command in your message.\n'
+                'currently supported commands are:\n\n**subscribe**\n**unsubscribe**\n\n'
+                'These commands have to be in the body of the message.\n\n\n'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
+                )
         
 
     def submission_handler(self, submission):
