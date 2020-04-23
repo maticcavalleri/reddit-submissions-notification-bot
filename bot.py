@@ -1,4 +1,5 @@
 import praw
+import re
 
 class RedditBot():
     def __init__(self, cred_file='cred.txt'):
@@ -7,14 +8,17 @@ class RedditBot():
         self.reddit = praw.Reddit(client_id=self.cred_dict['client_id'],
                         client_secret=self.cred_dict['client_secret'], password=self.cred_dict['password'],
                         user_agent=self.cred_dict['user_agent'], username=self.cred_dict['username'])
+        self.user_list = []
 
     def main(self):
         """ where things go down """
         subreddit = self.reddit.subreddit('PhotoshopRequest')
 
+        # pause_after -1 required so two streams can run simultaneously
         inbox_stream = self.reddit.inbox.stream(pause_after=-1)
         submission_stream = subreddit.stream.submissions(pause_after=-1)
 
+        # while True wouldn't be required if there was only one stream
         while True:
             self.run_stream(inbox_stream, self.inbox_handler)
             self.run_stream(submission_stream, self.submission_handler)
@@ -28,10 +32,30 @@ class RedditBot():
 
     def inbox_handler(self, message):
         """ handles new personal messages """
-        print(message.author, message.body)
+        if "unsubscribe" in message.body.lower():
+            self.user_list.remove(str(message.author))
+            self.reddit.redditor(str(message.author)).message(
+                'successfully unsubscribed',
+                'You have been successfully **unsubscribed** from receiving messages from this bot.\n\n\n'
+                '*^I\'m ^a ^bot, ^bleep, ^bloop*'
+                )
+            print('unsubbed')
+            
+        elif "subscribe" in message.body.lower() and str(message.author) not in self.user_list:
+            self.user_list.append(str(message.author))
+            self.reddit.redditor(str(message.author)).message(
+                'successfully subscribed',
+                'You have been successfully **subscribed** from receiving messages from this bot.\n\n\n'
+                '*^I\'m ^a ^bot, ^bleep, ^bloop*'
+                )
+            print('subbed')
+        else:
+            print(message.author, message.body)
+        
 
     def submission_handler(self, submission):
         """ handles new posts """
+        # TODO handle messages
         print(submission.title)
 
     def get_credentials_from_file(self, file):
