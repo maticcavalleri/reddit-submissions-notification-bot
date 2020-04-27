@@ -75,8 +75,10 @@ class RedditBot():
     def submission_handler(self, submission):
         """ handles new posts """
         # TODO handle messages
-        print(submission.title)
-
+        if 'paid' not in submission.link_flair_text.lower():
+            return
+        notify(submission)
+        
     def get_credentials_from_file(self, file):
         """ gets all credentials required for authentication """
         cred_dict = {}
@@ -85,6 +87,12 @@ class RedditBot():
             temp = line.replace('\t', '').replace(' ', '').strip().split('=')
             cred_dict[str(temp[0])] = str(temp[1])
         return cred_dict
+
+    def notify(self, submission):
+        """ notifies all subscribed users on subscription list about posted submission """
+        # TODO send messages to people on the list
+        print(submission.link_flair_text)
+
 
 if __name__ == "__main__":
     bot = RedditBot()
