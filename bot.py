@@ -1,14 +1,15 @@
 import praw
 import re
 
+
 class RedditBot():
     def __init__(self, cred_file='cred.txt'):
         """ authenticates itself upon creation """
         self.cred_dict = self.get_credentials_from_file(cred_file)
         self.reddit = praw.Reddit(client_id=self.cred_dict['client_id'],
-                        client_secret=self.cred_dict['client_secret'], password=self.cred_dict['password'],
-                        user_agent=self.cred_dict['user_agent'], username=self.cred_dict['username'])
-        self.user_list = []
+                                  client_secret=self.cred_dict['client_secret'], password=self.cred_dict['password'],
+                                  user_agent=self.cred_dict['user_agent'], username=self.cred_dict['username'])
+        self.subscribers = []
 
     def main(self):
         """ where things go down """
@@ -32,35 +33,35 @@ class RedditBot():
 
     def inbox_handler(self, message):
         """ handles new personal messages """
-        if "unsubscribe" in message.body.lower() and str(message.author) in self.user_list:
-            self.user_list.remove(str(message.author))
+        if "unsubscribe" in message.body.lower() and str(message.author) in self.subscribers:
+            self.subscribers.remove(str(message.author))
             self.reddit.redditor(str(message.author)).message(
                 'successfully unsubscribed',
                 'You have been successfully **unsubscribed** from receiving messages from this bot.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-                )
+            )
 
-        elif "unsubscribe" in message.body.lower() and str(message.author) not in self.user_list:
+        elif "unsubscribe" in message.body.lower() and str(message.author) not in self.subscribers:
             self.reddit.redditor(str(message.author)).message(
                 'Already unsubscribed',
                 'You are trying to **unsubscribe** but it seems like **you are not on subscription list**.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-                )
+            )
 
-        elif "subscribe" in message.body.lower() and str(message.author) in self.user_list:
+        elif "subscribe" in message.body.lower() and str(message.author) in self.subscribers:
             self.reddit.redditor(str(message.author)).message(
                 'Already subscribed',
                 'You are trying to **subscribe** but it seems like **you are already on subscription list**.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-                )
+            )
 
-        elif "subscribe" in message.body.lower() and str(message.author) not in self.user_list:
-            self.user_list.append(str(message.author))
+        elif "subscribe" in message.body.lower() and str(message.author) not in self.subscribers:
+            self.subscribers.append(str(message.author))
             self.reddit.redditor(str(message.author)).message(
                 'successfully subscribed',
                 'You have been successfully **subscribed** to receiving messages from this bot.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-                )
+            )
 
         else:
             self.reddit.redditor(str(message.author)).message(
@@ -69,14 +70,13 @@ class RedditBot():
                 'currently supported commands are:\n\n**subscribe**\n**unsubscribe**\n\n'
                 'These commands have to be in the body of the message.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-                )
+            )
 
     def submission_handler(self, submission):
         """ handles new posts """
-        # TODO handle messages
         if 'paid' not in submission.link_flair_text.lower():
             return
-        notify(submission)
+        self.notify(submission)
 
     def get_credentials_from_file(self, file_name):
         """ gets all credentials required for authentication """
@@ -89,8 +89,17 @@ class RedditBot():
 
     def notify(self, submission):
         """ notifies all subscribed users on subscription list about posted submission """
-        # TODO send messages to people on the list
-        print(submission.link_flair_text)
+        for redditor in self.subscribers:
+            self.reddit.redditor(redditor).message(
+                # subject:
+                'New paid submission posted in ' + str(submission.subreddit),
+                # body:
+                'New paid submission posted by u/' +
+                str(submission.author) + ' in ' +
+                str(submission.subreddit) + '\n\n'
+                'Direct link: ' + str(submission.shortlink) + '\n\n\n'
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
+            )
 
 
 if __name__ == "__main__":
