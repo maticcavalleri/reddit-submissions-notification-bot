@@ -70,7 +70,6 @@ class RedditBot():
                 'These commands have to be in the body of the message.\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*'
                 )
-        
 
     def submission_handler(self, submission):
         """ handles new posts """
@@ -78,14 +77,14 @@ class RedditBot():
         if 'paid' not in submission.link_flair_text.lower():
             return
         notify(submission)
-        
-    def get_credentials_from_file(self, file):
+
+    def get_credentials_from_file(self, file_name):
         """ gets all credentials required for authentication """
         cred_dict = {}
-        file = open(file, "r")
-        for line in file.readlines():
-            temp = line.replace('\t', '').replace(' ', '').strip().split('=')
-            cred_dict[str(temp[0])] = str(temp[1])
+        with open(file_name, "r") as file:
+            for line in file.readlines():
+                temp = line.replace('\t', '').replace(' ', '').strip().split('=')
+                cred_dict[str(temp[0])] = str(temp[1])
         return cred_dict
 
     def notify(self, submission):
