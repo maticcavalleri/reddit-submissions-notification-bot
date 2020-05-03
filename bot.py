@@ -1,16 +1,20 @@
 import shelve
 import praw
+import re
+
 
 class RedditBot():
     def __init__(self, cred_file='cred.txt'):
         """ authenticates itself upon creation """
         self.cred_dict = self.get_credentials_from_file(cred_file)
-        self.reddit = praw.Reddit(client_id=self.cred_dict['client_id'],
-                                  client_secret=self.cred_dict['client_secret'], password=self.cred_dict['password'],
-                                  user_agent=self.cred_dict['user_agent'], username=self.cred_dict['username'])
-
+        self.reddit = praw.Reddit(username=self.cred_dict['username'],
+                                  password=self.cred_dict['password'],
+                                  client_id=self.cred_dict['client_id'],
+                                  client_secret=self.cred_dict['client_secret'],
+                                  user_agent=self.cred_dict['user_agent'])
+        # get data from database file or create one if it does not yet exist
         self.db = shelve.open('database')
-        # init keys if they do not exist (example: first time running the program with empty database):
+        # initialize keys if they do not yet exist
         if 'processed_messages' not in self.db:
             self.db['processed_messages'] = []
         if 'processed_submissions' not in self.db:
@@ -19,7 +23,7 @@ class RedditBot():
             self.db['subscribers'] = []
 
     def main(self):
-        """ where things go down """
+        """ main function that runs the program """
         subreddit = self.reddit.subreddit('PhotoshopRequest')
 
         # pause_after -1 required so two streams can run simultaneously
@@ -100,7 +104,7 @@ class RedditBot():
         if submission.id in self.db['processed_submissions']:
             return
         self.store_data('processed_submissions', submission.id)
-
+        # if no trigger word in submission flair do not notify
         if 'paid' not in submission.link_flair_text.lower():
             return
         self.notify(submission)
@@ -110,23 +114,24 @@ class RedditBot():
         cred_dict = {}
         with open(file_name, "r") as file:
             for line in file.readlines():
-                temp = line.replace('\t', '').replace(' ', '').strip().split('=')
+                temp = "".join(line.split()).split('=')
                 cred_dict[str(temp[0])] = str(temp[1])
         return cred_dict
 
     def notify(self, submission):
         """ notifies all subscribed users on subscription list about posted submission """
         for redditor in self.db['subscribers']:
+            # message that is send to subscribers:
             self.reddit.redditor(redditor).message(
                 # subject:
-                'New paid submission posted in ' + str(submission.subreddit),
+                'New paid submission posted in ' +
+                str(submission.subreddit),
                 # body:
                 'New paid submission posted by u/' +
                 str(submission.author) + ' in ' +
                 str(submission.subreddit) + '\n\n'
                 'Direct link: ' + str(submission.shortlink) + '\n\n\n'
-                '*^I ^am ^a ^bot, ^bleep, ^bloop*'
-            )
+                '*^I ^am ^a ^bot, ^bleep, ^bloop*')
 
 
 if __name__ == "__main__":
