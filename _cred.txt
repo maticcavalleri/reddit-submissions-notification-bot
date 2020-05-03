@@ -1,0 +1,7 @@
+client_id 	= client_id_goes_here
+client_secret	= client_secret_goes_here
+username 	= bot_username_goes_here
+password 	= bot_password_goes_here
+user_agent 	= user_agent_goes_here
+
+IMPORTANT!!: remove "_" character in file name (end result: "cred.txt")
