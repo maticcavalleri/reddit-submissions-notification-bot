@@ -118,11 +118,12 @@ class RedditBot():
             cred_dict = self.get_credentials_from_input()
         try:
             reddit = praw.Reddit(username=cred_dict['username'],
-                             password=cred_dict['password'],
-                             client_id=cred_dict['client_id'],
-                             client_secret=cred_dict['client_secret'],
-                             user_agent=cred_dict['user_agent'])
-            print('Authenticated successfully, logged in as: ' + str(reddit.user.me()))
+                                 password=cred_dict['password'],
+                                 client_id=cred_dict['client_id'],
+                                 client_secret=cred_dict['client_secret'],
+                                 user_agent=cred_dict['user_agent'])
+            print(f'Authenticated successfully\n'
+                  f'logged in as: {str(reddit.user.me())}')
         except Exception as e:
             print('authentication failed')
             raise
