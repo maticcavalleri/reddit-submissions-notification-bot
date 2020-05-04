@@ -6,9 +6,9 @@ Currently configured to send a personal message on reddit to all of it's subscri
 
 ### HOW TO SET UP:
 1. Create a Reddit bot account
-2. Rename "\_cred.txt" to "cred.txt" and inside of it enter your bot's credentials
+2. Rename "\_cred.txt" to "cred.txt" and inside of it enter your bot's credentials. If this step is skipped you will be prompted to enter credentials via terminal.
 3. Modify the code to your likings (change subreddit, method of triggering message...)
-4. Start running the script and you are all set up :)
+4. You are all set up. You can now start running the script :)
 
 ### HOW TO SUBSCRIBE:
 In order to subscribe to the bot you have to send a personal message to the bot containing keyword "subscribe" in message body. In order to unsubscribe the keyword is "unsubscribe".
