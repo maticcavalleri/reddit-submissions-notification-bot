@@ -1,3 +1,5 @@
+from getpass import getpass
+import os.path
 import shelve
 import praw
 import re
@@ -6,12 +8,7 @@ import re
 class RedditBot():
     def __init__(self, cred_file='cred.txt'):
         """ authenticates itself upon creation """
-        self.cred_dict = self.get_credentials_from_file(cred_file)
-        self.reddit = praw.Reddit(username=self.cred_dict['username'],
-                                  password=self.cred_dict['password'],
-                                  client_id=self.cred_dict['client_id'],
-                                  client_secret=self.cred_dict['client_secret'],
-                                  user_agent=self.cred_dict['user_agent'])
+        self.reddit = self.authenticate(cred_file)
         # get data from database file or create one if it does not yet exist
         self.db = shelve.open('database')
         # initialize keys if they do not yet exist
@@ -26,7 +23,7 @@ class RedditBot():
         """ main function that runs the program """
         subreddit = self.reddit.subreddit('PhotoshopRequest')
 
-        # pause_after -1 required so two streams can run simultaneously
+        # pause_after=-1 required so two streams can run simultaneously
         inbox_stream = self.reddit.inbox.stream(pause_after=-1)
         submission_stream = subreddit.stream.submissions(pause_after=-1)
 
@@ -44,6 +41,7 @@ class RedditBot():
 
     def store_data(self, key, obj):
         """ stores data locally with shelve module """
+        # TODO: store only last 100 ids for submissions (and inbox?)
         temp = self.db[key]
         temp.append(obj)
         self.db[key] = temp
@@ -109,8 +107,40 @@ class RedditBot():
             return
         self.notify(submission)
 
+    def authenticate(self, file_name):
+        """ gets credentials from file or from user input if no file is found """
+        # get credentials from file if such file exists
+        if os.path.exists(file_name):
+            cred_dict = self.get_credentials_from_file(file_name)
+        # if such file does not exist get credentials from user input
+        else:
+            print('No cred.txt file was found. Enter your credentials here:')
+            cred_dict = self.get_credentials_from_input()
+        try:
+            reddit = praw.Reddit(username=cred_dict['username'],
+                             password=cred_dict['password'],
+                             client_id=cred_dict['client_id'],
+                             client_secret=cred_dict['client_secret'],
+                             user_agent=cred_dict['user_agent'])
+            print('Authenticated successfully, logged in as: ' + str(reddit.user.me()))
+        except Exception as e:
+            print('authentication failed')
+            raise
+        else:
+            return reddit
+
+    def get_credentials_from_input(self):
+        """ gets credentials required for authentication from user input """
+        cred_dict = {}
+        cred_dict['username'] = input('username: ')
+        cred_dict['password'] = getpass('password (not shown when typed): ')
+        cred_dict['client_id'] = input('client id: ')
+        cred_dict['client_secret'] = input('client secret: ')
+        cred_dict['user_agent'] = input('user agent: ')
+        return cred_dict
+
     def get_credentials_from_file(self, file_name):
-        """ gets all credentials required for authentication """
+        """ gets credentials required for authentication from file """
         cred_dict = {}
         with open(file_name, "r") as file:
             for line in file.readlines():
