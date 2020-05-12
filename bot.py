@@ -41,7 +41,6 @@ class RedditBot():
 
     def store_data(self, key, obj):
         """ stores data locally with shelve module """
-        # TODO: store only last 100 ids for submissions (and inbox?)
         temp = self.db[key]
         temp.append(obj)
         # store only last 100 ids for posts and messages (100 is default fetch limit):
@@ -167,6 +166,7 @@ class RedditBot():
                 'Direct link: ' + str(submission.shortlink) + '\n\n\n'
                 '*^I ^am ^a ^bot, ^bleep, ^bloop*')
 
+    # TODO: logging what bot does to txt file
 
 if __name__ == "__main__":
     bot = RedditBot()
