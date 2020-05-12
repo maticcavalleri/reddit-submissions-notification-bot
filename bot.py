@@ -44,6 +44,9 @@ class RedditBot():
         # TODO: store only last 100 ids for submissions (and inbox?)
         temp = self.db[key]
         temp.append(obj)
+        # store only last 100 ids for posts and messages (100 is default fetch limit):
+        if key == 'processed_messages' or key == 'processed_submissions':
+            temp = temp[-100:]
         self.db[key] = temp
 
     def remove_data(self, key, obj):
